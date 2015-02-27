@@ -58,13 +58,14 @@ function getVCALHeader($name = NULL) {
 	return $vcard;
 }
 
-function formatDate($fieldName, $fbDate) {
-	$time = strtotime($fbDate);
+function formatDate($fieldName, $fbDate, $offset=0) {
+	$time = strtotime($fbDate)+$offset;
 	
 	if (strstr($fbDate, "T") !== FALSE)
 		return $fieldName.":".gmdate('Ymd\THis\Z', $time);
 	else
-		return $fieldName.";VALUE=DATE:".date('Ymd', $time);
+		return $fieldName.":".gmdate('Ymd', $time);
+//		return $fieldName.";VALUE=DATE:".date('Ymd', $time);
 }
 
 function print_event($val) {
@@ -80,6 +81,8 @@ function print_event($val) {
 
 	if (isset($val['end_time']))
 		echo formatDate("DTEND", $val['end_time']).chr(10);
+	else
+		echo formatDate("DTEND", $val['start_time'], 3600*24).chr(10);
 
 	$description = str_replace(',', '\,', $val['description']);
 	$description = str_replace(chr(10), '\n', $description);
