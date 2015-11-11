@@ -6,10 +6,10 @@ Rename fbcalendar.conf.php.example to fbcalendar.conf.php and put your
 own Facebook API token in it.
 
 # Use
-fbcalendar.php?page-id=<facebook page id>
+fbcalendar.php?page-id=[facebook page id]
 Get every event related to the facebook page.
 
-fbcalendar.php?event-id=<facebook event id>
+fbcalendar.php?event-id=[facebook event id]
 Only get one event.
 
 adding &text to the URL parameters allows to see the calendar without downloading it.
