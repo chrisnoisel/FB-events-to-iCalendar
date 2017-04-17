@@ -1,5 +1,7 @@
 <?php
-require('fb2cal.conf.php'); // contains access token ($token)
+error_reporting(E_ERROR | E_PARSE);
+
+require('fbcalendar.conf.php'); // contains access token ($token)
 $id = "369191986522047"; // Default Facebook group ID
 
 //// log requests (usefull to see when Google refreshes google calendar : each 6-8 hours)
