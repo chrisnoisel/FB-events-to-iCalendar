@@ -64,12 +64,20 @@ function formatDate($fieldName, $fbDate, $offset=0) {
 }
 
 function print_event($val) {
+	if (isset($val['event_times']) && count($val['event_times']) > 0)
+		foreach ($val['event_times'] as $time)
+			print_event_with_time($val, $time);
+	else
+		print_event_with_time($val, $val);
+}
+
+function print_event_with_time($val, $timearray) {
 	$appendurl = "https://www.facebook.com/events/";
 
 	echo "BEGIN:VEVENT".chr(13).chr(10);
-	echo "UID:e".$val['id']."@facebook.com".chr(13).chr(10);
+	echo "UID:e".$timearray['id']."@facebook.com".chr(13).chr(10);
 	echo "SUMMARY:".$val['name'].chr(13).chr(10);
-	echo "URL:".$appendurl.$val['id'].chr(13).chr(10);
+	echo "URL:".$appendurl.$timearray['id'].chr(13).chr(10);
 	
 	// place
 	if(isset($val['place'])) {
@@ -96,21 +104,20 @@ function print_event($val) {
 		echo "LOCATION:".$location.chr(13).chr(10);
 	}
 	
-	//
-	
-	echo formatDate("DTSTART", $val['start_time']).chr(13).chr(10);
+	// dates
+	echo formatDate("DTSTART", $timearray['start_time']).chr(13).chr(10);
 	if (isset($val['updated_time']))
 		echo formatDate("LAST-MODIFIED", $val['updated_time']).chr(13).chr(10);
-	if (isset($val['end_time']))
-		echo formatDate("DTEND", $val['end_time']).chr(13).chr(10);
-//	else
-//		echo formatDate("DTEND", $val['start_time'], 3600*24).chr(13).chr(10);
+	if (isset($timearray['end_time']))
+		echo formatDate("DTEND", $timearray['end_time']).chr(13).chr(10);
 
+	// desc
 	$description = str_replace(',', '\,', $val['description']);
 	$description = str_replace(chr(10), '\n', $description);
-	$description = $description.'\n\n'.$appendurl.$val['id'];
+	$description = $description.'\n\n'.$appendurl.$timearray['id'];
 	echo "DESCRIPTION:".$description.chr(13).chr(10);
 
+	// closure
 	echo "END:VEVENT".chr(13).chr(10);
 }
 
