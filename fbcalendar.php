@@ -1,16 +1,13 @@
 <?php
 error_reporting(E_ERROR | E_PARSE);
-
-require('fbcalendar.conf.php'); // contains access token ($token)
-$id = "369191986522047"; // Default Facebook group ID
+define("CONF_FILE", 'fbcalendar.conf.php');
+define("FACEBOOK_API", "https://graph.facebook.com/v3.2");
+define("DEFAULT_PAGE_ID", "369191986522047"); // Default Facebook page ID
 
 //// log requests (usefull to see when Google refreshes google calendar : each 6-8 hours)
 //$date = date(DATE_RFC2822);
 //file_put_contents("fb2cal.log.txt", $date."  ".$_SERVER['REMOTE_ADDR']."  ".$_SERVER['HTTP_USER_AGENT'].PHP_EOL, FILE_APPEND);
 ////
-
-// v2.5 available until "At least until April 2018" (https://developers.facebook.com/docs/apps/changelog)
-define("FACEBOOK_API", "https://graph.facebook.com/v2.5");
 
 ///////////////////////////////////////////
 
@@ -121,29 +118,43 @@ function print_event_with_time($val, $timearray) {
 	echo "END:VEVENT".chr(13).chr(10);
 }
 
-$event_only = false;
 
-if (isset($_GET['event-id']) && is_numeric($_GET['event-id'])) {
-	
-	setHTTPHeaders(isset($_GET['text']) ? null : "e".$_GET['event-id']);
-	echo getVCALHeader();
-	print_event(requestEvent($_GET['event-id'], $token));
+if( ! file_exists(CONF_FILE) )
+{
+	header('Content-Type: text/plain; charset=utf-8');
+	echo "no config file '".CONF_FILE."' found.".chr(10);
+	echo "as of 2018, you need a page token to access public page events. See : https://developers.facebook.com/docs/facebook-login/access-tokens/".chr(10);
+	echo "use the following to generate access tokens :".chr(10);
+	echo "- https://developers.facebook.com/tools/explorer/".chr(10);
+	echo "- https://developers.facebook.com/tools/debug/accesstoken/ (usefull to extend access token expiration date)".chr(10);
 }
-else {
-	if (isset($_GET['page-id']) && is_numeric($_GET['page-id']))
-		$id = $_GET['page-id'];
-	else if (isset($_GET['id']) && is_numeric($_GET['id']))
-		$id = $_GET['id']; 
-	
-	setHTTPHeaders(isset($_GET['text']) ? null : "c".$id);
-	
-	$name = requestOwner($id, $token);
-	echo getVCALHeader($name);
-	
-	$events = requestEvents($id, $token);
-	if (!empty($events)) foreach($events as $event) {
-		print_event($event);
+else
+{
+	require('fbcalendar.conf.php'); // contains access token ($token)
+
+	if (isset($_GET['event-id']) && is_numeric($_GET['event-id'])) {
+		
+		setHTTPHeaders(isset($_GET['text']) ? null : "e".$_GET['event-id']);
+		echo getVCALHeader();
+		print_event(requestEvent($_GET['event-id'], $token));
 	}
+	else {
+		$id = DEFAULT_PAGE_ID;
+		if (isset($_GET['page-id']) && is_numeric($_GET['page-id']))
+			$id = $_GET['page-id'];
+		else if (isset($_GET['id']) && is_numeric($_GET['id']))
+			$id = $_GET['id']; 
+		
+		setHTTPHeaders(isset($_GET['text']) ? null : "c".$id);
+		
+		$name = requestOwner($id, $token);
+		echo getVCALHeader($name);
+		
+		$events = requestEvents($id, $token);
+		if (!empty($events)) foreach($events as $event) {
+			print_event($event);
+		}
+	}
+	echo('END:VCALENDAR');
 }
 ?>
-END:VCALENDAR
