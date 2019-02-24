@@ -27,13 +27,13 @@ function requestOwner($id, $token) {
 }
 
 function requestEvents($id, $token) {
-	$url = FACEBOOK_API."/".$id."/events?access_token=".$token."&fields=id,event_times,event_time,description,end_time,name,place,updated_time,cover";
+	$url = FACEBOOK_API."/".$id."/events?access_token=".$token."&fields=id,event_times,event_time,description,start_time,end_time,name,place,updated_time,cover";
 	$json = json_decode(file_get_contents($url), true);
 	return $json['data'];
 }
 
 function requestEvent($id, $token) {
-	$url = FACEBOOK_API."/".$id."?access_token=".$token."&fields=id,event_times,event_time,description,end_time,name,place,updated_time,cover";
+	$url = FACEBOOK_API."/".$id."?access_token=".$token."&fields=id,event_times,event_time,description,start_time,end_time,name,place,updated_time,cover";
 	return json_decode(file_get_contents($url), true);
 }
 
@@ -73,8 +73,15 @@ function print_event_with_time($val, $timearray) {
 
 	echo "BEGIN:VEVENT".chr(13).chr(10);
 	echo "UID:e".$timearray['id']."@facebook.com".chr(13).chr(10);
-	echo "SUMMARY:".$val['name'].chr(13).chr(10);
-	echo "URL:".$appendurl.$timearray['id'].chr(13).chr(10);
+	
+	// dates
+	if (isset($val['updated_time'])) {
+		echo formatDate("DTSTAMP", $val['updated_time']).chr(13).chr(10); // here only to comply with RFC 5545 3.6.1
+		echo formatDate("LAST-MODIFIED", $val['updated_time']).chr(13).chr(10);
+	}
+	echo formatDate("DTSTART", $timearray['start_time']).chr(13).chr(10);
+	if (isset($timearray['end_time']))
+		echo formatDate("DTEND", $timearray['end_time']).chr(13).chr(10);
 	
 	// place
 	if(isset($val['place'])) {
@@ -98,16 +105,11 @@ function print_event_with_time($val, $timearray) {
 				$location .= ", ".$place["location"]["country"];
 		}
 		
-		echo "LOCATION:".$location.chr(13).chr(10);
+		echo "LOCATION:".str_replace(',', '\,', $location).chr(13).chr(10);
 	}
 	
-	// dates
-	echo formatDate("DTSTART", $timearray['start_time']).chr(13).chr(10);
-	if (isset($val['updated_time']))
-		echo formatDate("LAST-MODIFIED", $val['updated_time']).chr(13).chr(10);
-	if (isset($timearray['end_time']))
-		echo formatDate("DTEND", $timearray['end_time']).chr(13).chr(10);
-
+	echo "SUMMARY:".$val['name'].chr(13).chr(10);
+	echo "URL:".$appendurl.$timearray['id'].chr(13).chr(10);
 	// desc
 	$description = str_replace(',', '\,', $val['description']);
 	$description = str_replace(chr(10), '\n', $description);
@@ -115,7 +117,6 @@ function print_event_with_time($val, $timearray) {
 	echo "DESCRIPTION:".$description.chr(13).chr(10);
 	
 	// cover image
-	// ATTACH;FMTTYPE=image/jpeg:http://domain.com/images/awesome.jpg
 	if ( isset($val['cover']) && isset($val['cover']['source']))
 		echo "ATTACH;FMTTYPE=image/jpeg:".$val['cover']['source'].chr(13).chr(10);
 
