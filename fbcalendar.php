@@ -27,13 +27,13 @@ function requestOwner($id, $token) {
 }
 
 function requestEvents($id, $token) {
-	$url = FACEBOOK_API."/".$id."/events?access_token=".$token;
+	$url = FACEBOOK_API."/".$id."/events?access_token=".$token."&fields=id,event_times,event_time,description,end_time,name,place,updated_time,cover";
 	$json = json_decode(file_get_contents($url), true);
 	return $json['data'];
 }
 
 function requestEvent($id, $token) {
-	$url = FACEBOOK_API."/".$id."?access_token=".$token;
+	$url = FACEBOOK_API."/".$id."?access_token=".$token."&fields=id,event_times,event_time,description,end_time,name,place,updated_time,cover";
 	return json_decode(file_get_contents($url), true);
 }
 
@@ -113,6 +113,11 @@ function print_event_with_time($val, $timearray) {
 	$description = str_replace(chr(10), '\n', $description);
 	$description = $description.'\n\n'.$appendurl.$timearray['id'];
 	echo "DESCRIPTION:".$description.chr(13).chr(10);
+	
+	// cover image
+	// ATTACH;FMTTYPE=image/jpeg:http://domain.com/images/awesome.jpg
+	if ( isset($val['cover']) && isset($val['cover']['source']))
+		echo "ATTACH;FMTTYPE=image/jpeg:".$val['cover']['source'].chr(13).chr(10);
 
 	// closure
 	echo "END:VEVENT".chr(13).chr(10);
